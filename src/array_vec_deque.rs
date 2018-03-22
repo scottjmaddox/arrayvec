@@ -15,11 +15,9 @@
 
 use std::ptr;
 use std::ops;
-use ::{new_array, NoDrop, Array, Index, RangeArgument, CapacityError};
+use {new_array, Array, CapacityError, Index, NoDrop, RangeArgument};
 
-
-pub struct ArrayVecDeque<A: Array>
-{
+pub struct ArrayVecDeque<A: Array> {
     // tail and head are pointers into the buffer. Tail always points
     // to the first element that could be read, Head always points
     // to where data should be written.
@@ -46,7 +44,7 @@ impl<A: Array> ArrayVecDeque<A> {
             Self {
                 tail: Index::from(0),
                 head: Index::from(0),
-                buf: NoDrop::new(new_array())
+                buf: NoDrop::new(new_array()),
             }
         }
     }
@@ -179,7 +177,9 @@ impl<A: Array> ArrayVecDeque<A> {
         } else {
             self.tail = self.wrap_sub(self.tail, 1);
             let tail = self.tail.to_usize();
-            unsafe { self.buffer_write(tail, value); }
+            unsafe {
+                self.buffer_write(tail, value);
+            }
             Ok(())
         }
     }
@@ -250,6 +250,7 @@ fn wrap_index(index: usize, size: usize) -> usize {
 mod tests {
     #[allow(unused_imports)]
     use super::*;
+
     #[test]
     fn new_push_pop_index() {
         let mut v = ArrayVecDeque::<[usize; 10]>::new();
@@ -262,6 +263,7 @@ mod tests {
         assert_eq!(v[0], 1);
         assert_eq!(v[1], 2);
     }
+
     #[test]
     fn wrap_around() {
         let mut v = ArrayVecDeque::<[usize; 3]>::new();

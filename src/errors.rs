@@ -1,7 +1,7 @@
 use std::fmt;
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 use std::any::Any;
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 use std::error::Error;
 
 /// Error value indicating insufficient capacity
@@ -13,9 +13,7 @@ pub struct CapacityError<T = ()> {
 impl<T> CapacityError<T> {
     /// Create a new `CapacityError` from `element`.
     pub fn new(element: T) -> CapacityError<T> {
-        CapacityError {
-            element: element,
-        }
+        CapacityError { element: element }
     }
 
     /// Extract the overflowing element
@@ -31,7 +29,7 @@ impl<T> CapacityError<T> {
 
 const CAPERROR: &'static str = "insufficient capacity";
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 /// Requires `features="std"`.
 impl<T: Any> Error for CapacityError<T> {
     fn description(&self) -> &str {
@@ -50,4 +48,3 @@ impl<T> fmt::Debug for CapacityError<T> {
         write!(f, "{}: {}", "CapacityError", CAPERROR)
     }
 }
-

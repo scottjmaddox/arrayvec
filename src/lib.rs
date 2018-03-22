@@ -1,4 +1,4 @@
-//! **arrayvec** provides the types `ArrayVec` and `ArrayString`: 
+//! **arrayvec** provides the types `ArrayVec` and `ArrayString`:
 //! array-backed vector and string types, which store their contents inline.
 //!
 //! The arrayvec package has the following cargo features:
@@ -23,23 +23,20 @@
 //!
 //! This version of arrayvec requires Rust 1.13 or later.
 //!
-#![doc(html_root_url="https://docs.rs/arrayvec/0.4/")]
-#![cfg_attr(not(feature="std"), no_std)]
+#![doc(html_root_url = "https://docs.rs/arrayvec/0.4/")]
+#![cfg_attr(not(feature = "std"), no_std)]
 extern crate nodrop;
-#[cfg(feature="serde-1")]
+#[cfg(feature = "serde-1")]
 extern crate serde;
 
-#[cfg(not(feature="std"))]
+#[cfg(not(feature = "std"))]
 extern crate core as std;
 
 use std::cmp;
 use std::iter;
 use std::mem;
 use std::ptr;
-use std::ops::{
-    Deref,
-    DerefMut,
-};
+use std::ops::{Deref, DerefMut};
 use std::slice;
 
 // extra traits
@@ -47,17 +44,17 @@ use std::borrow::{Borrow, BorrowMut};
 use std::hash::{Hash, Hasher};
 use std::fmt;
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 use std::io;
 
-#[cfg(not(feature="use_union"))]
+#[cfg(not(feature = "use_union"))]
 use nodrop::NoDrop;
 
-#[cfg(feature="use_union")]
+#[cfg(feature = "use_union")]
 use std::mem::ManuallyDrop as NoDrop;
 
-#[cfg(feature="serde-1")]
-use serde::{Serialize, Deserialize, Serializer, Deserializer};
+#[cfg(feature = "serde-1")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 mod array;
 mod array_string;
@@ -72,7 +69,6 @@ use array::Index;
 pub use array_string::ArrayString;
 pub use array_vec_deque::ArrayVecDeque;
 pub use errors::CapacityError;
-
 
 unsafe fn new_array<A: Array>() -> A {
     // Note: Returning an uninitialized value here only works
@@ -132,7 +128,10 @@ impl<A: Array> ArrayVec<A> {
     /// ```
     pub fn new() -> ArrayVec<A> {
         unsafe {
-            ArrayVec { xs: NoDrop::new(new_array()), len: Index::from(0) }
+            ArrayVec {
+                xs: NoDrop::new(new_array()),
+                len: Index::from(0),
+            }
         }
     }
 
@@ -146,7 +145,9 @@ impl<A: Array> ArrayVec<A> {
     /// assert_eq!(array.len(), 2);
     /// ```
     #[inline]
-    pub fn len(&self) -> usize { self.len.to_usize() }
+    pub fn len(&self) -> usize {
+        self.len.to_usize()
+    }
 
     /// Return the capacity of the `ArrayVec`.
     ///
@@ -157,7 +158,9 @@ impl<A: Array> ArrayVec<A> {
     /// assert_eq!(array.capacity(), 3);
     /// ```
     #[inline]
-    pub fn capacity(&self) -> usize { A::capacity() }
+    pub fn capacity(&self) -> usize {
+        A::capacity()
+    }
 
     /// Return if the `ArrayVec` is completely filled.
     ///
@@ -169,7 +172,9 @@ impl<A: Array> ArrayVec<A> {
     /// array.push(1);
     /// assert!(array.is_full());
     /// ```
-    pub fn is_full(&self) -> bool { self.len() == self.capacity() }
+    pub fn is_full(&self) -> bool {
+        self.len() == self.capacity()
+    }
 
     /// Push `element` to the end of the vector.
     ///
@@ -221,7 +226,6 @@ impl<A: Array> ArrayVec<A> {
             Err(CapacityError::new(element))
         }
     }
-
 
     /// Push `element` to the end of the vector without checking the capacity.
     ///
@@ -296,7 +300,11 @@ impl<A: Array> ArrayVec<A> {
     /// assert_eq!(&array[..], &["y", "x"]);
     ///
     /// ```
-    pub fn try_insert(&mut self, index: usize, element: A::Item) -> Result<(), CapacityError<A::Item>> {
+    pub fn try_insert(
+        &mut self,
+        index: usize,
+        element: A::Item,
+    ) -> Result<(), CapacityError<A::Item>> {
         if index > self.len() {
             panic_oob!("try_insert", index, self.len())
         }
@@ -306,7 +314,8 @@ impl<A: Array> ArrayVec<A> {
         let len = self.len();
 
         // follows is just like Vec<T>
-        unsafe { // infallible
+        unsafe {
+            // infallible
             // The spot to put the new value
             {
                 let p: *mut _ = self.get_unchecked_mut(index);
@@ -338,7 +347,7 @@ impl<A: Array> ArrayVec<A> {
     /// ```
     pub fn pop(&mut self) -> Option<A::Item> {
         if self.len() == 0 {
-            return None
+            return None;
         }
         unsafe {
             let new_len = self.len() - 1;
@@ -368,14 +377,12 @@ impl<A: Array> ArrayVec<A> {
     /// ```
     pub fn swap_remove(&mut self, index: usize) -> A::Item {
         self.swap_pop(index)
-            .unwrap_or_else(|| {
-                panic_oob!("swap_remove", index, self.len())
-            })
+            .unwrap_or_else(|| panic_oob!("swap_remove", index, self.len()))
     }
 
     /// Remove the element at `index` and swap the last element into its place.
     ///
-    /// This is a checked version of `.swap_remove`.  
+    /// This is a checked version of `.swap_remove`.
     /// This operation is O(1).
     ///
     /// Return `Some(` *element* `)` if the index is in bounds, else `None`.
@@ -416,9 +423,7 @@ impl<A: Array> ArrayVec<A> {
     /// ```
     pub fn remove(&mut self, index: usize) -> A::Item {
         self.pop_at(index)
-            .unwrap_or_else(|| {
-                panic_oob!("remove", index, self.len())
-            })
+            .unwrap_or_else(|| panic_oob!("remove", index, self.len()))
     }
 
     /// Remove the element at `index` and shift down the following elements.
@@ -461,12 +466,14 @@ impl<A: Array> ArrayVec<A> {
     /// assert_eq!(&array[..], &[1, 2, 3]);
     /// ```
     pub fn truncate(&mut self, len: usize) {
-        while self.len() > len { self.pop(); }
+        while self.len() > len {
+            self.pop();
+        }
     }
 
     /// Remove all elements in the vector.
     pub fn clear(&mut self) {
-        while let Some(_) = self.pop() { }
+        while let Some(_) = self.pop() {}
     }
 
     /// Retains only the elements specified by the predicate.
@@ -483,7 +490,8 @@ impl<A: Array> ArrayVec<A> {
     /// assert_eq!(&array[..], &[1, 3]);
     /// ```
     pub fn retain<F>(&mut self, mut f: F)
-        where F: FnMut(&mut A::Item) -> bool
+    where
+        F: FnMut(&mut A::Item) -> bool,
     {
         let len = self.len();
         let mut del = 0;
@@ -515,7 +523,6 @@ impl<A: Array> ArrayVec<A> {
         debug_assert!(length <= self.capacity());
         self.len = Index::from(length);
     }
-
 
     /// Create a draining iterator that removes the specified range in the vector
     /// and yields the removed items from start to end. The element range is
@@ -604,9 +611,7 @@ impl<A: Array> Deref for ArrayVec<A> {
     type Target = [A::Item];
     #[inline]
     fn deref(&self) -> &[A::Item] {
-        unsafe {
-            slice::from_raw_parts(self.xs.as_ptr(), self.len())
-        }
+        unsafe { slice::from_raw_parts(self.xs.as_ptr(), self.len()) }
     }
 }
 
@@ -614,9 +619,7 @@ impl<A: Array> DerefMut for ArrayVec<A> {
     #[inline]
     fn deref_mut(&mut self) -> &mut [A::Item] {
         let len = self.len();
-        unsafe {
-            slice::from_raw_parts_mut(self.xs.as_mut_ptr(), len)
-        }
+        unsafe { slice::from_raw_parts_mut(self.xs.as_mut_ptr(), len) }
     }
 }
 
@@ -631,10 +634,12 @@ impl<A: Array> DerefMut for ArrayVec<A> {
 /// ```
 impl<A: Array> From<A> for ArrayVec<A> {
     fn from(array: A) -> Self {
-        ArrayVec { xs: NoDrop::new(array), len: Index::from(A::capacity()) }
+        ArrayVec {
+            xs: NoDrop::new(array),
+            len: Index::from(A::capacity()),
+        }
     }
 }
-
 
 /// Iterate the `ArrayVec` with references to each element.
 ///
@@ -650,7 +655,9 @@ impl<A: Array> From<A> for ArrayVec<A> {
 impl<'a, A: Array> IntoIterator for &'a ArrayVec<A> {
     type Item = &'a A::Item;
     type IntoIter = slice::Iter<'a, A::Item>;
-    fn into_iter(self) -> Self::IntoIter { self.iter() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
 }
 
 /// Iterate the `ArrayVec` with mutable references to each element.
@@ -667,7 +674,9 @@ impl<'a, A: Array> IntoIterator for &'a ArrayVec<A> {
 impl<'a, A: Array> IntoIterator for &'a mut ArrayVec<A> {
     type Item = &'a mut A::Item;
     type IntoIter = slice::IterMut<'a, A::Item>;
-    fn into_iter(self) -> Self::IntoIter { self.iter_mut() }
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter_mut()
+    }
 }
 
 /// Iterate the `ArrayVec` with each element by value.
@@ -685,10 +694,12 @@ impl<A: Array> IntoIterator for ArrayVec<A> {
     type Item = A::Item;
     type IntoIter = IntoIter<A>;
     fn into_iter(self) -> IntoIter<A> {
-        IntoIter { index: Index::from(0), v: self, }
+        IntoIter {
+            index: Index::from(0),
+            v: self,
+        }
     }
 }
-
 
 /// By-value iterator for `ArrayVec`.
 pub struct IntoIter<A: Array> {
@@ -733,7 +744,7 @@ impl<A: Array> DoubleEndedIterator for IntoIter<A> {
     }
 }
 
-impl<A: Array> ExactSizeIterator for IntoIter<A> { }
+impl<A: Array> ExactSizeIterator for IntoIter<A> {}
 
 impl<A: Array> Drop for IntoIter<A> {
     fn drop(&mut self) {
@@ -742,18 +753,17 @@ impl<A: Array> Drop for IntoIter<A> {
         let len = self.v.len();
         unsafe {
             self.v.set_len(0);
-            let elements = slice::from_raw_parts_mut(
-                self.v.get_unchecked_mut(index),
-                len - index);
+            let elements = slice::from_raw_parts_mut(self.v.get_unchecked_mut(index), len - index);
             ptr::drop_in_place(elements);
         }
     }
 }
 
 /// A draining iterator for `ArrayVec`.
-pub struct Drain<'a, A> 
-    where A: Array,
-          A::Item: 'a,
+pub struct Drain<'a, A>
+where
+    A: Array,
+    A::Item: 'a,
 {
     /// Index of tail to preserve
     tail_start: usize,
@@ -768,17 +778,16 @@ unsafe impl<'a, A: Array + Sync> Sync for Drain<'a, A> {}
 unsafe impl<'a, A: Array + Send> Send for Drain<'a, A> {}
 
 impl<'a, A: Array> Iterator for Drain<'a, A>
-    where A::Item: 'a,
+where
+    A::Item: 'a,
 {
     type Item = A::Item;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
-        self.iter.next().map(|elt|
-            unsafe {
-                ptr::read(elt as *const _)
-            }
-        )
+        self.iter
+            .next()
+            .map(|elt| unsafe { ptr::read(elt as *const _) })
     }
 
     #[inline]
@@ -788,28 +797,32 @@ impl<'a, A: Array> Iterator for Drain<'a, A>
 }
 
 impl<'a, A: Array> DoubleEndedIterator for Drain<'a, A>
-    where A::Item: 'a,
+where
+    A::Item: 'a,
 {
     #[inline]
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.iter.next_back().map(|elt|
-            unsafe {
-                ptr::read(elt as *const _)
-            }
-        )
+        self.iter
+            .next_back()
+            .map(|elt| unsafe { ptr::read(elt as *const _) })
     }
 }
 
-impl<'a, A: Array> ExactSizeIterator for Drain<'a, A> where A::Item: 'a {}
+impl<'a, A: Array> ExactSizeIterator for Drain<'a, A>
+where
+    A::Item: 'a,
+{
+}
 
-impl<'a, A: Array> Drop for Drain<'a, A> 
-    where A::Item: 'a
+impl<'a, A: Array> Drop for Drain<'a, A>
+where
+    A::Item: 'a,
 {
     fn drop(&mut self) {
         // len is currently 0 so panicking while dropping will not cause a double drop.
 
         // exhaust self first
-        while let Some(_) = self.next() { }
+        while let Some(_) = self.next() {}
 
         if self.tail_len > 0 {
             unsafe {
@@ -827,7 +840,8 @@ impl<'a, A: Array> Drop for Drain<'a, A>
 }
 
 struct ScopeExitGuard<T, Data, F>
-    where F: FnMut(&Data, &mut T)
+where
+    F: FnMut(&Data, &mut T),
 {
     value: T,
     data: Data,
@@ -835,21 +849,20 @@ struct ScopeExitGuard<T, Data, F>
 }
 
 impl<T, Data, F> Drop for ScopeExitGuard<T, Data, F>
-    where F: FnMut(&Data, &mut T)
+where
+    F: FnMut(&Data, &mut T),
 {
     fn drop(&mut self) {
         (self.f)(&self.data, &mut self.value)
     }
 }
 
-
-
 /// Extend the `ArrayVec` with an iterator.
-/// 
+///
 /// Does not extract more items than there is space for. No error
 /// occurs if there are more iterator elements.
 impl<A: Array> Extend<A::Item> for ArrayVec<A> {
-    fn extend<T: IntoIterator<Item=A::Item>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = A::Item>>(&mut self, iter: T) {
         let take = self.capacity() - self.len();
         unsafe {
             let len = self.len();
@@ -861,9 +874,7 @@ impl<A: Array> Extend<A::Item> for ArrayVec<A> {
             let mut guard = ScopeExitGuard {
                 value: self,
                 data: len,
-                f: |&len, self_| {
-                    self_.set_len(len)
-                }
+                f: |&len, self_| self_.set_len(len),
             };
             for elt in iter.into_iter().take(take) {
                 ptr::write(ptr, elt);
@@ -875,11 +886,11 @@ impl<A: Array> Extend<A::Item> for ArrayVec<A> {
 }
 
 /// Create an `ArrayVec` from an iterator.
-/// 
+///
 /// Does not extract more items than there is space for. No error
 /// occurs if there are more iterator elements.
 impl<A: Array> iter::FromIterator<A::Item> for ArrayVec<A> {
-    fn from_iter<T: IntoIterator<Item=A::Item>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = A::Item>>(iter: T) -> Self {
         let mut array = ArrayVec::new();
         array.extend(iter);
         array
@@ -887,7 +898,8 @@ impl<A: Array> iter::FromIterator<A::Item> for ArrayVec<A> {
 }
 
 impl<A: Array> Clone for ArrayVec<A>
-    where A::Item: Clone
+where
+    A::Item: Clone,
 {
     fn clone(&self) -> Self {
         self.iter().cloned().collect()
@@ -911,7 +923,8 @@ impl<A: Array> Clone for ArrayVec<A>
 }
 
 impl<A: Array> Hash for ArrayVec<A>
-    where A::Item: Hash
+where
+    A::Item: Hash,
 {
     fn hash<H: Hasher>(&self, state: &mut H) {
         Hash::hash(&**self, state)
@@ -919,7 +932,8 @@ impl<A: Array> Hash for ArrayVec<A>
 }
 
 impl<A: Array> PartialEq for ArrayVec<A>
-    where A::Item: PartialEq
+where
+    A::Item: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         **self == **other
@@ -927,33 +941,51 @@ impl<A: Array> PartialEq for ArrayVec<A>
 }
 
 impl<A: Array> PartialEq<[A::Item]> for ArrayVec<A>
-    where A::Item: PartialEq
+where
+    A::Item: PartialEq,
 {
     fn eq(&self, other: &[A::Item]) -> bool {
         **self == *other
     }
 }
 
-impl<A: Array> Eq for ArrayVec<A> where A::Item: Eq { }
+impl<A: Array> Eq for ArrayVec<A>
+where
+    A::Item: Eq,
+{
+}
 
 impl<A: Array> Borrow<[A::Item]> for ArrayVec<A> {
-    fn borrow(&self) -> &[A::Item] { self }
+    fn borrow(&self) -> &[A::Item] {
+        self
+    }
 }
 
 impl<A: Array> BorrowMut<[A::Item]> for ArrayVec<A> {
-    fn borrow_mut(&mut self) -> &mut [A::Item] { self }
+    fn borrow_mut(&mut self) -> &mut [A::Item] {
+        self
+    }
 }
 
 impl<A: Array> AsRef<[A::Item]> for ArrayVec<A> {
-    fn as_ref(&self) -> &[A::Item] { self }
+    fn as_ref(&self) -> &[A::Item] {
+        self
+    }
 }
 
 impl<A: Array> AsMut<[A::Item]> for ArrayVec<A> {
-    fn as_mut(&mut self) -> &mut [A::Item] { self }
+    fn as_mut(&mut self) -> &mut [A::Item] {
+        self
+    }
 }
 
-impl<A: Array> fmt::Debug for ArrayVec<A> where A::Item: fmt::Debug {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { (**self).fmt(f) }
+impl<A: Array> fmt::Debug for ArrayVec<A>
+where
+    A::Item: fmt::Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        (**self).fmt(f)
+    }
 }
 
 impl<A: Array> Default for ArrayVec<A> {
@@ -963,7 +995,10 @@ impl<A: Array> Default for ArrayVec<A> {
     }
 }
 
-impl<A: Array> PartialOrd for ArrayVec<A> where A::Item: PartialOrd {
+impl<A: Array> PartialOrd for ArrayVec<A>
+where
+    A::Item: PartialOrd,
+{
     #[inline]
     fn partial_cmp(&self, other: &ArrayVec<A>) -> Option<cmp::Ordering> {
         (**self).partial_cmp(other)
@@ -990,22 +1025,25 @@ impl<A: Array> PartialOrd for ArrayVec<A> where A::Item: PartialOrd {
     }
 }
 
-impl<A: Array> Ord for ArrayVec<A> where A::Item: Ord {
+impl<A: Array> Ord for ArrayVec<A>
+where
+    A::Item: Ord,
+{
     fn cmp(&self, other: &ArrayVec<A>) -> cmp::Ordering {
         (**self).cmp(other)
     }
 }
 
-#[cfg(feature="std")]
+#[cfg(feature = "std")]
 /// `Write` appends written data to the end of the vector.
 ///
 /// Requires `features="std"`.
-impl<A: Array<Item=u8>> io::Write for ArrayVec<A> {
+impl<A: Array<Item = u8>> io::Write for ArrayVec<A> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
         unsafe {
             let len = self.len();
-            let mut tail = slice::from_raw_parts_mut(self.get_unchecked_mut(len),
-                                                     A::capacity() - len);
+            let mut tail =
+                slice::from_raw_parts_mut(self.get_unchecked_mut(len), A::capacity() - len);
             let result = tail.write(data);
             if let Ok(written) = result {
                 self.set_len(len + written);
@@ -1013,39 +1051,54 @@ impl<A: Array<Item=u8>> io::Write for ArrayVec<A> {
             result
         }
     }
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 
-#[cfg(feature="serde-1")]
+#[cfg(feature = "serde-1")]
 /// Requires crate feature `"serde-1"`
-impl<T: Serialize, A: Array<Item=T>> Serialize for ArrayVec<A> {
+impl<T: Serialize, A: Array<Item = T>> Serialize for ArrayVec<A> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
+    where
+        S: Serializer,
     {
         serializer.collect_seq(self)
     }
 }
 
-#[cfg(feature="serde-1")]
+#[cfg(feature = "serde-1")]
 /// Requires crate feature `"serde-1"`
-impl<'de, T: Deserialize<'de>, A: Array<Item=T>> Deserialize<'de> for ArrayVec<A> {
+impl<'de, T: Deserialize<'de>, A: Array<Item = T>> Deserialize<'de> for ArrayVec<A> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
-        use serde::de::{Visitor, SeqAccess, Error};
+        use serde::de::{Error, SeqAccess, Visitor};
         use std::marker::PhantomData;
 
-        struct ArrayVecVisitor<'de, T: Deserialize<'de>, A: Array<Item=T>>(PhantomData<(&'de (), T, A)>);
+        struct ArrayVecVisitor<'de, T: Deserialize<'de>, A: Array<Item = T>>(
+            PhantomData<(&'de (), T, A)>,
+        );
 
-        impl<'de, T: Deserialize<'de>, A: Array<Item=T>> Visitor<'de> for ArrayVecVisitor<'de, T, A> {
+        impl<'de, T, A> Visitor<'de> for ArrayVecVisitor<'de, T, A>
+        where
+            T: Deserialize<'de>,
+            A: Array<Item = T>,
+        {
             type Value = ArrayVec<A>;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                write!(formatter, "an array with no more than {} items", A::capacity())
+                write!(
+                    formatter,
+                    "an array with no more than {} items",
+                    A::capacity()
+                )
             }
 
             fn visit_seq<SA>(self, mut seq: SA) -> Result<Self::Value, SA::Error>
-                where SA: SeqAccess<'de>,
+            where
+                SA: SeqAccess<'de>,
             {
                 let mut values = ArrayVec::<A>::new();
 

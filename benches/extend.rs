@@ -1,6 +1,6 @@
-
 extern crate arrayvec;
-#[macro_use] extern crate bencher;
+#[macro_use]
+extern crate bencher;
 
 use arrayvec::ArrayVec;
 
@@ -39,5 +39,10 @@ fn extend_with_slice(b: &mut Bencher) {
     b.bytes = v.capacity() as u64;
 }
 
-benchmark_group!(benches, extend_with_constant, extend_with_range, extend_with_slice);
+benchmark_group!(
+    benches,
+    extend_with_constant,
+    extend_with_range,
+    extend_with_slice
+);
 benchmark_main!(benches);

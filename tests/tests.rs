@@ -1,5 +1,6 @@
 extern crate arrayvec;
-#[macro_use] extern crate matches;
+#[macro_use]
+extern crate matches;
 
 use arrayvec::ArrayVec;
 use arrayvec::ArrayString;
@@ -7,7 +8,6 @@ use std::mem;
 use arrayvec::CapacityError;
 
 use std::collections::HashMap;
-
 
 #[test]
 fn test_simple() {
@@ -104,7 +104,6 @@ fn test_drop() {
         drop(inner);
         assert_eq!(flag.get(), 3);
     }
-
 }
 
 #[test]
@@ -337,7 +336,7 @@ fn test_string() {
 #[test]
 fn test_string_from() {
     let text = "hello world";
-	// Test `from` constructor
+    // Test `from` constructor
     let u = ArrayString::<[_; 11]>::from(text).unwrap();
     assert_eq!(&u, text);
     assert_eq!(u.len(), text.len());
@@ -375,7 +374,6 @@ fn test_string_push() {
     assert_eq!("abcαβx", &s[..]);
     assert!(s.try_push('x').is_err());
 }
-
 
 #[test]
 fn test_insert_at_length() {

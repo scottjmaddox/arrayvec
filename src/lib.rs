@@ -61,6 +61,7 @@ use serde::{Serialize, Deserialize, Serializer, Deserializer};
 
 mod array;
 mod array_string;
+mod array_vec_deque;
 mod char;
 mod range;
 mod errors;
@@ -69,6 +70,7 @@ pub use array::Array;
 pub use range::RangeArgument;
 use array::Index;
 pub use array_string::ArrayString;
+pub use array_vec_deque::ArrayVecDeque;
 pub use errors::CapacityError;
 
 
